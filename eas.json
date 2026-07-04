@@ -1,0 +1,72 @@
+{
+
+// cd to project directory
+// npm install -> install packages
+// npx expo prebuild --clean 
+// # For local dev on Android device:
+// npx expo start
+// or
+// npx expo run:android
+// # Or for a fresh EAS build:
+// npx eas build --platform android --profile development
+
+  //eas build -p android --profile preview-nominify  ---> to build in cloud
+  // eas build -p android --profile preview-nominify --local   -> to build in local
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "credentialsSource": "local",
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "credentialsSource": "local",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview-nominify": {
+      "extends": "preview",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease -Pandroid.enableMinifyInReleaseBuilds=false -Pandroid.enableShrinkResourcesInReleaseBuilds=false"
+      }
+    },
+    "mock": {
+      "credentialsSource": "local",
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_USE_MOCK": "1"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "credentialsSource": "local",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "distribution": "store"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
