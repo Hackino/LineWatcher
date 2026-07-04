@@ -3,6 +3,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { NavigationContainer, DarkTheme, type Theme } from '@react-navigation/native';
 import { colors } from '@ds';
 import { useMeterStore } from '@core/state';
@@ -33,6 +34,8 @@ export default function App() {
   useEffect(() => {
     let authUnsub: () => void = () => {};
     let dataUnsub: () => void = () => {};
+    let dataTimer: ReturnType<typeof setTimeout> | null = null;
+    let watchData: WatchUserData | null = null;
     let revealed = false;
 
     // Reveal the app exactly once, no matter which path gets us there — so the
@@ -44,19 +47,60 @@ export default function App() {
       SplashScreen.hideAsync().catch(() => {});
     };
 
+    const clearDataTimer = () => {
+      if (dataTimer) {
+        clearTimeout(dataTimer);
+        dataTimer = null;
+      }
+    };
+
+    // (Re)open the realtime data subscription for the currently authed user.
+    // Wired up here so `retry` in the meter store can call it after a failure
+    // without needing the whole app to remount.
+    const startDataWatch = () => {
+      if (!watchData) return;
+      dataUnsub();
+      clearDataTimer();
+      useMeterStore.getState().setError(null);
+      dataUnsub = watchData.execute(
+        (d) => {
+          clearDataTimer();
+          useMeterStore.getState().setUserData(d);
+        },
+        (err) => {
+          clearDataTimer();
+          useMeterStore.getState().setError(
+            err.message || 'Failed to load your data.',
+          );
+        },
+      );
+      // Firebase RTDB does not surface transport errors while offline; it just
+      // never fires. So we install a hard deadline: if no snapshot arrives in
+      // 12s we flip the store into the error state so the retry CTA renders.
+      dataTimer = setTimeout(() => {
+        const state = useMeterStore.getState();
+        if (!state.userData) {
+          state.setError('No connection. Check your internet and try again.');
+        }
+      }, 12000);
+    };
+
     (async () => {
       try {
         await configureContainer();
         const watchAuth = container.resolve(WatchAuth);
-        const watchData = container.resolve(WatchUserData);
+        watchData = container.resolve(WatchUserData);
+        useMeterStore.getState().setRetry(startDataWatch);
 
         authUnsub = watchAuth.execute((user) => {
           useAuthStore.getState().setUser(user);
           dataUnsub();
+          clearDataTimer();
           if (user) {
-            dataUnsub = watchData.execute((d) => useMeterStore.getState().setUserData(d));
+            startDataWatch();
           } else {
             useMeterStore.getState().setUserData(null);
+            useMeterStore.getState().setError(null);
             dataUnsub = () => {};
           }
           reveal();
@@ -72,23 +116,27 @@ export default function App() {
 
     return () => {
       clearTimeout(timer);
+      clearDataTimer();
       dataUnsub();
       authUnsub();
+      useMeterStore.getState().setRetry(null);
     };
   }, []);
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
-      {ready ? (
-        <NavigationContainer theme={navTheme}>
-          <RootNavigator />
-        </NavigationContainer>
-      ) : (
-        <View style={styles.splash}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
-      )}
+      <KeyboardProvider>
+        <StatusBar style="light" />
+        {ready ? (
+          <NavigationContainer theme={navTheme}>
+            <RootNavigator />
+          </NavigationContainer>
+        ) : (
+          <View style={styles.splash}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        )}
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

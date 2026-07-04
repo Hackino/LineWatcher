@@ -15,6 +15,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   /** Colors the glow ring and the confirm button. Defaults to danger. */
   tone?: Tone;
+  /** Hide the cancel button for single-action alerts (e.g. error popups). */
+  singleAction?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -31,6 +33,7 @@ export function ConfirmDialog({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   tone = 'danger',
+  singleAction = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -73,19 +76,21 @@ export function ConfirmDialog({
               </AppText>
             ) : null}
             <View style={styles.actions}>
-              <Pressable
-                onPress={onCancel}
-                style={({ pressed }) => [
-                  styles.btn,
-                  styles.btnGhost,
-                  pressed && styles.pressed,
-                ]}
-                accessibilityRole="button"
-              >
-                <AppText variant="title" color={colors.textMuted}>
-                  {cancelLabel}
-                </AppText>
-              </Pressable>
+              {singleAction ? null : (
+                <Pressable
+                  onPress={onCancel}
+                  style={({ pressed }) => [
+                    styles.btn,
+                    styles.btnGhost,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityRole="button"
+                >
+                  <AppText variant="title" color={colors.textMuted}>
+                    {cancelLabel}
+                  </AppText>
+                </Pressable>
+              )}
               <Pressable
                 onPress={onConfirm}
                 style={({ pressed }) => [

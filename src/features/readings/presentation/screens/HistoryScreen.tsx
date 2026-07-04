@@ -7,6 +7,7 @@ import {
   Screen,
   PrimaryButton,
   EmptyState,
+  ErrorState,
   Segmented,
   SourceChip,
   HistorySkeleton,
@@ -20,6 +21,8 @@ import {
   useSelectedSource,
   useSourceReadings,
   useUserData,
+  useDataError,
+  useDataRetry,
 } from '@core/state';
 import type { Interval, Reading } from '@core/model';
 import type { RootStackParamList } from '@app/navigation/types';
@@ -38,6 +41,8 @@ export function HistoryScreen() {
   const location = useSelectedLocation();
   const source = useSelectedSource();
   const readings = useSourceReadings(source?.id ?? null);
+  const error = useDataError();
+  const retry = useDataRetry();
   const [range, setRange] = useState<Range>('30d');
   const [pendingDelete, setPendingDelete] = useState<Reading | null>(null);
 
@@ -54,6 +59,14 @@ export function HistoryScreen() {
       .filter((r) => new Date(r.at).getTime() >= cutoff)
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   }, [readings, range]);
+
+  if (error && !data) {
+    return (
+      <Screen title="History" eyebrow="Readings">
+        <ErrorState message={error} onRetry={retry ?? undefined} />
+      </Screen>
+    );
+  }
 
   if (!data || !summary || !source || !location) {
     return <HistorySkeleton />;

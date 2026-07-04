@@ -1,5 +1,10 @@
 import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  type ReturnKeyTypeOptions,
+} from 'react-native';
 import { colors, radius, spacing, typography } from '../theme/tokens';
 import { AppText } from './Text';
 
@@ -14,6 +19,16 @@ interface FieldProps {
   error?: string;
   suffix?: string;
   mono?: boolean;
+  /** Keyboard return key. Use `'next'` to chain into another field. */
+  returnKeyType?: ReturnKeyTypeOptions;
+  /** Fired when the user hits the return key on the keyboard. */
+  onSubmitEditing?: () => void;
+  /** Set `false` when chaining to the next field so the keyboard stays open. */
+  blurOnSubmit?: boolean;
+  /** Ref to the underlying TextInput — used to focus the field programmatically. */
+  inputRef?: React.Ref<TextInput>;
+  /** Called when the field gains focus. */
+  onFocus?: () => void;
 }
 
 /** Labeled text/numeric input with inline error + optional unit suffix. */
@@ -28,6 +43,11 @@ export function Field({
   error,
   suffix,
   mono = false,
+  returnKeyType,
+  onSubmitEditing,
+  blurOnSubmit,
+  inputRef,
+  onFocus,
 }: FieldProps) {
   return (
     <View style={styles.wrap}>
@@ -41,6 +61,7 @@ export function Field({
         ]}
       >
         <TextInput
+          ref={inputRef}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -48,6 +69,10 @@ export function Field({
           keyboardType={keyboardType}
           secureTextEntry={secureTextEntry}
           autoCapitalize={autoCapitalize}
+          returnKeyType={returnKeyType}
+          onSubmitEditing={onSubmitEditing}
+          blurOnSubmit={blurOnSubmit}
+          onFocus={onFocus}
           style={[
             styles.input,
             mono && { fontFamily: typography.mono, fontVariant: ['tabular-nums'] },

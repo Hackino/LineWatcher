@@ -8,6 +8,7 @@ import {
   Card,
   PrimaryButton,
   EmptyState,
+  ErrorState,
   SectionHeader,
   SourceChip,
   StatTile,
@@ -25,6 +26,8 @@ import {
   useSelectedLocation,
   useSelectedSource,
   useSourceReadings,
+  useDataError,
+  useDataRetry,
 } from '@core/state';
 import type { RootStackParamList } from '@app/navigation/types';
 import { StatusCard } from '../components/StatusCard';
@@ -39,7 +42,17 @@ export function HomeScreen() {
   const location = useSelectedLocation();
   const source = useSelectedSource();
   const readings = useSourceReadings(source?.id ?? null);
+  const error = useDataError();
+  const retry = useDataRetry();
   const [trendWidth, onTrendLayout] = useMeasuredWidth();
+
+  if (error && !data) {
+    return (
+      <Screen title="LineWatch" eyebrow="Line monitor">
+        <ErrorState message={error} onRetry={retry ?? undefined} />
+      </Screen>
+    );
+  }
 
   if (!data || !summary || !location || !source) {
     return <HomeSkeleton />;

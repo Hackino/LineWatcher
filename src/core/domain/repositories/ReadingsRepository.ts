@@ -22,7 +22,16 @@ export interface NewReading {
  * again on every change (realtime).
  */
 export interface ReadingsRepository {
-  watch(onData: (data: UserData) => void): () => void; // returns unsubscribe
+  /**
+   * Subscribes to the user's realtime data. Emits the current data immediately
+   * and again on every change. When available, `onError` is invoked on
+   * datasource errors (permission denied, malformed snapshot, transport
+   * failures) so callers can surface a retryable state to the UI.
+   */
+  watch(
+    onData: (data: UserData) => void,
+    onError?: (err: Error) => void,
+  ): () => void; // returns unsubscribe
 
   addReading(input: NewReading): Promise<void>;
   deleteReading(sourceId: string, id: string): Promise<void>;

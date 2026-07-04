@@ -69,16 +69,21 @@ export class FirebaseReadingsDataSource implements ReadingsRepository {
     return ref(this.db(), `users/${uid}`);
   }
 
-  watch(onData: (data: UserData) => void): () => void {
+  watch(
+    onData: (data: UserData) => void,
+    onError?: (err: Error) => void,
+  ): () => void {
     const user = getAuth().currentUser;
     if (!user) {
       onData(defaultUserData(null));
       return () => {};
     }
     const email = user.email;
-    // Populate defaults immediately so screens render (empty states for a new
-    // account) even before the first snapshot arrives or if the read is slow.
-    onData(defaultUserData(email));
+    // Do NOT pre-emit `defaultUserData` here — it would flip the store's
+    // `loading` flag to false and paint a "no data" empty state before the
+    // real RTDB snapshot arrives (masking the shimmer for anyone with actual
+    // data). Screens keep their skeletons until `onValue` fires below; the
+    // 8s safety-net timer in App.tsx guards against a stuck read.
     return onValue(
       ref(this.db(), `users/${user.uid}`),
       (snap) => {
@@ -95,8 +100,10 @@ export class FirebaseReadingsDataSource implements ReadingsRepository {
           );
         }
       },
-      (err) =>
-        console.warn('[RTDB] read failed:', err instanceof Error ? err.message : err),
+      (err) => {
+        console.warn('[RTDB] read failed:', err instanceof Error ? err.message : err);
+        onError?.(err instanceof Error ? err : new Error(String(err)));
+      },
     );
   }
 

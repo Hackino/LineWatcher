@@ -12,6 +12,21 @@ export function useIsLoading() {
   return useMeterStore((s) => s.loading);
 }
 
+/**
+ * Message set when the data subscription failed or timed out before first
+ * emission. Screens pair this with `useUserData()` — if the message is set and
+ * user data is still null, they render a retryable error state instead of the
+ * skeleton.
+ */
+export function useDataError() {
+  return useMeterStore((s) => s.error);
+}
+
+/** The bootstrap-provided retry handler; null before bootstrap wires it. */
+export function useDataRetry() {
+  return useMeterStore((s) => s.retry);
+}
+
 /** All locations, sorted by createdAt for a stable order. */
 export function useLocations(): Location[] {
   const data = useMeterStore((s) => s.userData);

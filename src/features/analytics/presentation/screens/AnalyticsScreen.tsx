@@ -9,6 +9,7 @@ import {
   Segmented,
   SectionHeader,
   EmptyState,
+  ErrorState,
   SourceChip,
   DualLineChart,
   BarChart,
@@ -23,6 +24,8 @@ import {
   useLeakSummary,
   useSelectedLocation,
   useSelectedSource,
+  useDataError,
+  useDataRetry,
 } from '@core/state';
 import type { RootStackParamList } from '@app/navigation/types';
 
@@ -37,6 +40,8 @@ export function AnalyticsScreen() {
   const summary = useLeakSummary();
   const location = useSelectedLocation();
   const source = useSelectedSource();
+  const error = useDataError();
+  const retry = useDataRetry();
   const [range, setRange] = useState<Range>('30d');
   const [lineW, onLineLayout] = useMeasuredWidth();
   const [barW, onBarLayout] = useMeasuredWidth();
@@ -88,6 +93,14 @@ export function AnalyticsScreen() {
       onChange={(v) => setRange(v as Range)}
     />
   );
+
+  if (error && !data) {
+    return (
+      <Screen title="Analytics" eyebrow="Consumption">
+        <ErrorState message={error} onRetry={retry ?? undefined} />
+      </Screen>
+    );
+  }
 
   if (!data || !summary || !location || !source) {
     return <AnalyticsSkeleton />;

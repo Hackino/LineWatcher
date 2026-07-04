@@ -7,6 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { colors, spacing } from '../theme/tokens';
 import { AppText } from './Text';
 
@@ -27,6 +28,13 @@ export function Screen({
   scroll = true,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  // Present when the screen is rendered under the bottom tab navigator; the
+  // tab bar is positioned absolutely and floats over content, so we reserve
+  // exactly its height at the bottom of the scroll body. Falls back to a plain
+  // safe-area bottom padding for stack screens with no tab bar.
+  const tabBarHeight = React.useContext(BottomTabBarHeightContext);
+  const bottomPadding =
+    tabBarHeight != null ? tabBarHeight + spacing.md : insets.bottom + spacing.xxxl;
 
   return (
     <KeyboardAvoidingView
@@ -52,8 +60,12 @@ export function Screen({
         <ScrollView
           style={styles.body}
           contentContainerStyle={{
+            // flexGrow lets full-height children (ErrorState, EmptyState) fill
+            // the available viewport so they can center themselves vertically.
+            // Children without flex still lay out top-aligned as before.
+            flexGrow: 1,
             padding: spacing.lg,
-            paddingBottom: insets.bottom + spacing.xxxl,
+            paddingBottom: bottomPadding,
             gap: spacing.lg,
           }}
           keyboardShouldPersistTaps="handled"

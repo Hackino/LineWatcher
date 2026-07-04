@@ -14,6 +14,7 @@ import {
   SectionHeader,
   SourceChip,
   EmptyState,
+  ErrorState,
   LeakSkeleton,
   colors,
   spacing,
@@ -25,6 +26,8 @@ import {
   useLeakSummary,
   useSelectedLocation,
   useSelectedSource,
+  useDataError,
+  useDataRetry,
 } from '@core/state';
 import type { RootStackParamList } from '@app/navigation/types';
 import { UpdateLeakThreshold } from '../../domain/usecases/updateLeakThreshold';
@@ -37,6 +40,17 @@ export function LeakScreen() {
   const summary = useLeakSummary();
   const location = useSelectedLocation();
   const source = useSelectedSource();
+  const error = useDataError();
+  const retry = useDataRetry();
+
+  if (error && !data) {
+    return (
+      <Screen title="Anti-theft" eyebrow="Line integrity">
+        <ErrorState message={error} onRetry={retry ?? undefined} />
+      </Screen>
+    );
+  }
+
   if (!data || !summary || !location || !source) {
     return <LeakSkeleton />;
   }

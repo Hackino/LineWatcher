@@ -14,7 +14,10 @@ export class WatchUserData {
     @inject(TOKENS.ReadingsRepository) private readonly repo: ReadingsRepository,
   ) {}
 
-  execute(onData: (data: UserData) => void): () => void {
-    return this.repo.watch(onData);
+  execute(
+    onData: (data: UserData) => void,
+    onError?: (err: Error) => void,
+  ): () => void {
+    return this.repo.watch(onData, onError);
   }
 }

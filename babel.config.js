@@ -21,6 +21,9 @@ module.exports = function (api) {
           },
         },
       ],
+      // Reanimated 4 requires react-native-worklets/plugin (used transitively by
+      // react-native-keyboard-controller for smooth IME tracking). Must be last.
+      'react-native-worklets/plugin',
     ],
   };
 };

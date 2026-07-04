@@ -54,7 +54,10 @@ export class MockReadingsDataSource implements ReadingsRepository {
     this.listeners.forEach((l) => l(data));
   }
 
-  watch(onData: (data: UserData) => void): () => void {
+  watch(
+    onData: (data: UserData) => void,
+    _onError?: (err: Error) => void,
+  ): () => void {
     onData(this.load()); // emit current immediately
     this.listeners.add(onData);
     return () => {

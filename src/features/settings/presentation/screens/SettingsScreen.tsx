@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { container } from 'tsyringe';
@@ -7,6 +8,8 @@ import {
   Screen,
   AppText,
   Card,
+  ConfirmDialog,
+  ErrorState,
   Field,
   PrimaryButton,
   SectionHeader,
@@ -15,7 +18,7 @@ import {
   radius,
   spacing,
 } from '@ds';
-import { useUserData } from '@core/state';
+import { useUserData, useDataError, useDataRetry } from '@core/state';
 import { useAuthStore } from '@features/auth/presentation/state/authStore';
 import type { RootStackParamList } from '@app/navigation/types';
 import { UpdateProfile } from '../../domain/usecases/updateProfile';
@@ -32,6 +35,8 @@ function num(text: string, fallback: number): number {
 export function SettingsScreen() {
   const navigation = useNavigation<Nav>();
   const data = useUserData();
+  const error = useDataError();
+  const retry = useDataRetry();
   const signOut = useAuthStore((s) => s.signOut);
 
   const [currency, setCurrency] = useState(data?.profile.currency ?? 'USD');
@@ -39,6 +44,15 @@ export function SettingsScreen() {
     String(Math.round((data?.settings.leakThresholdPct ?? 0) * 100)),
   );
   const [saved, setSaved] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+
+  if (error && !data) {
+    return (
+      <Screen title="Settings" eyebrow="Configuration">
+        <ErrorState message={error} onRetry={retry ?? undefined} />
+      </Screen>
+    );
+  }
 
   if (!data) return <SettingsSkeleton />;
 
@@ -79,9 +93,16 @@ export function SettingsScreen() {
               </AppText>
             </View>
             <View style={styles.chevron}>
-              <AppText variant="h2" color={colors.textMuted} style={styles.chevronGlyph}>
-                ›
-              </AppText>
+              <Svg width={12} height={14} viewBox="0 0 12 14">
+                <Path
+                  d="M3 1 L9 7 L3 13"
+                  stroke={colors.textMuted}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </Svg>
             </View>
           </Card>
         )}
@@ -107,7 +128,26 @@ export function SettingsScreen() {
 
       <PrimaryButton label={saved ? 'Saved ✓' : 'Save changes'} onPress={onSave} />
 
-      <PrimaryButton label="Sign out" variant="danger" onPress={signOut} />
+      <PrimaryButton
+        label="Sign out"
+        variant="danger"
+        onPress={() => setConfirmSignOut(true)}
+      />
+
+      <ConfirmDialog
+        visible={confirmSignOut}
+        eyebrow="Session"
+        title="Sign out of LineWatch?"
+        message="You'll need to sign back in to keep tracking your meters. Your readings stay saved."
+        confirmLabel="Sign out"
+        cancelLabel="Stay"
+        tone="danger"
+        onConfirm={() => {
+          setConfirmSignOut(false);
+          signOut();
+        }}
+        onCancel={() => setConfirmSignOut(false)}
+      />
     </Screen>
   );
 }
@@ -129,11 +169,6 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  chevronGlyph: {
-    lineHeight: 32,
-    textAlign: 'center',
-    width: '100%',
   },
   pressed: { opacity: 0.7 },
 });
