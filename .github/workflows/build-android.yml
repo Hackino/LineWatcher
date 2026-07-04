@@ -66,7 +66,21 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # Retry npm ci — the registry occasionally drops connections (ECONNRESET)
+          # on GitHub-hosted runners; a couple of retries recovers reliably.
+          npm config set fetch-retries 5
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+          for attempt in 1 2 3; do
+            if npm ci --no-audit --no-fund; then
+              exit 0
+            fi
+            echo "npm ci failed (attempt $attempt) — retrying in 15s..."
+            sleep 15
+          done
+          echo "::error::npm ci failed after 3 attempts"
+          exit 1
 
       - name: Write Firebase Android config
         env:
