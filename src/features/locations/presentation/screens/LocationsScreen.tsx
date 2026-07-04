@@ -58,7 +58,7 @@ export function LocationsScreen() {
   };
 
   return (
-    <Screen title="Locations" eyebrow="Metering">
+    <Screen title="Locations" eyebrow="Metering" back>
       <Card style={styles.addCard}>
         <SectionHeader title="Add a location" />
         <Field

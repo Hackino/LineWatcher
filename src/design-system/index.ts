@@ -16,6 +16,7 @@ export { StatTile } from './components/StatTile';
 export { MeterReadoutCard } from './components/MeterReadoutCard';
 export { SourceChip } from './components/SourceChip';
 export { Shimmer } from './components/Shimmer';
+export { AnimatedSplash } from './components/AnimatedSplash';
 export { ConfirmDialog } from './components/ConfirmDialog';
 export { LoadingOverlay } from './components/LoadingOverlay';
 export { NeonTabBarBackground } from './components/NeonTabBarBackground';

@@ -84,7 +84,7 @@ export function SourceEditorScreen() {
   const location = data.locations[locationId];
   if (!location) {
     return (
-      <Screen title="Source" eyebrow="Editor">
+      <Screen title="Source" eyebrow="Editor" back>
         <AppText variant="body" color={colors.textMuted}>
           Location no longer exists.
         </AppText>
@@ -144,6 +144,7 @@ export function SourceEditorScreen() {
     <Screen
       title={existing ? label || 'Edit source' : 'New source'}
       eyebrow={`${location.label} · ${existing ? 'Edit' : 'New'}`}
+      back
     >
       <Card style={styles.card}>
         <SectionHeader title="Source" />

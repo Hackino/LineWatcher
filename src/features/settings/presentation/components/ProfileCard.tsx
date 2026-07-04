@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { AppText, Card, colors, radius, spacing } from '@ds';
 import { monthLabel } from '@shared/format';
 import { monthKey } from '@core/domain/services';
@@ -7,6 +8,7 @@ import type { Profile } from '@core/model';
 
 interface ProfileCardProps {
   profile: Profile;
+  onEditName?: () => void;
 }
 
 function emailLocal(email: string): string {
@@ -20,7 +22,7 @@ function initialFor(profile: Profile): string {
 }
 
 /** Identity block at the top of Settings — avatar, name, email, since. */
-export function ProfileCard({ profile }: ProfileCardProps) {
+export function ProfileCard({ profile, onEditName }: ProfileCardProps) {
   const title = profile.displayName?.trim() || emailLocal(profile.email);
   const since = profile.createdAt ? monthLabel(monthKey(profile.createdAt)) : null;
 
@@ -47,6 +49,34 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           </AppText>
         ) : null}
       </View>
+      {onEditName ? (
+        <Pressable
+          onPress={onEditName}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Edit display name"
+          style={({ pressed }) => [styles.penBtn, pressed && styles.penBtnPressed]}
+        >
+          <Svg width={16} height={16} viewBox="0 0 24 24">
+            <Path
+              d="M4 20 L4 16 L15 5 L19 9 L8 20 Z"
+              stroke={colors.accent}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <Path
+              d="M13 7 L17 11"
+              stroke={colors.accent}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </Svg>
+        </Pressable>
+      ) : null}
     </Card>
   );
 }
@@ -73,4 +103,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   body: { flex: 1, gap: 2 },
+  penBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  penBtnPressed: { opacity: 0.65 },
 });

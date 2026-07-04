@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { NavigationContainer, DarkTheme, type Theme } from '@react-navigation/native';
-import { colors } from '@ds';
+import { colors, AnimatedSplash } from '@ds';
 import { useMeterStore } from '@core/state';
 import { WatchUserData } from '@core/domain/usecases/watchUserData';
 import { WatchAuth } from '@features/auth/domain/usecases/watchAuth';
@@ -13,8 +12,12 @@ import { useAuthStore } from '@features/auth/presentation/state/authStore';
 import { configureContainer, container } from '@app/di/container';
 import { RootNavigator } from '@app/navigation/RootNavigator';
 
-// Native splash stays up until DI is configured and the first auth state resolves.
+// Keep the OS splash up only until React mounts, then hand off to <AnimatedSplash />.
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Minimum time the animated splash stays on screen — long enough for the
+// wave to trace + wordmark to fade in even when bootstrap is instant.
+const MIN_SPLASH_MS = 2400;
 
 const navTheme: Theme = {
   ...DarkTheme,
@@ -35,16 +38,24 @@ export default function App() {
     let authUnsub: () => void = () => {};
     let dataUnsub: () => void = () => {};
     let dataTimer: ReturnType<typeof setTimeout> | null = null;
+    let revealTimer: ReturnType<typeof setTimeout> | null = null;
     let watchData: WatchUserData | null = null;
     let revealed = false;
+    const mountedAt = Date.now();
+
+    // Hand off from the OS splash immediately so <AnimatedSplash /> actually
+    // renders instead of being masked underneath the native image.
+    SplashScreen.hideAsync().catch(() => {});
 
     // Reveal the app exactly once, no matter which path gets us there — so the
-    // splash can never stay stuck (bootstrap error, slow auth, etc.).
+    // splash can never stay stuck (bootstrap error, slow auth, etc.). Holds
+    // for MIN_SPLASH_MS so the intro animation always plays through.
     const reveal = () => {
       if (revealed) return;
       revealed = true;
-      setReady(true);
-      SplashScreen.hideAsync().catch(() => {});
+      const elapsed = Date.now() - mountedAt;
+      const wait = Math.max(0, MIN_SPLASH_MS - elapsed);
+      revealTimer = setTimeout(() => setReady(true), wait);
     };
 
     const clearDataTimer = () => {
@@ -116,6 +127,7 @@ export default function App() {
 
     return () => {
       clearTimeout(timer);
+      if (revealTimer) clearTimeout(revealTimer);
       clearDataTimer();
       dataUnsub();
       authUnsub();
@@ -132,20 +144,9 @@ export default function App() {
             <RootNavigator />
           </NavigationContainer>
         ) : (
-          <View style={styles.splash}>
-            <ActivityIndicator color={colors.accent} />
-          </View>
+          <AnimatedSplash />
         )}
       </KeyboardProvider>
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  splash: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

@@ -3,34 +3,27 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { container } from 'tsyringe';
 import {
   Screen,
   AppText,
   Card,
   ConfirmDialog,
   ErrorState,
-  Field,
   PrimaryButton,
-  SectionHeader,
   SettingsSkeleton,
   colors,
   radius,
   spacing,
 } from '@ds';
+import { container } from 'tsyringe';
 import { useUserData, useDataError, useDataRetry } from '@core/state';
 import { useAuthStore } from '@features/auth/presentation/state/authStore';
 import type { RootStackParamList } from '@app/navigation/types';
 import { UpdateProfile } from '../../domain/usecases/updateProfile';
-import { UpdateSettings } from '../../domain/usecases/updateSettings';
 import { ProfileCard } from '../components/ProfileCard';
+import { EditNameDialog } from '../components/EditNameDialog';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-
-function num(text: string, fallback: number): number {
-  const n = Number(text.replace(',', '.'));
-  return Number.isNaN(n) ? fallback : n;
-}
 
 export function SettingsScreen() {
   const navigation = useNavigation<Nav>();
@@ -39,12 +32,8 @@ export function SettingsScreen() {
   const retry = useDataRetry();
   const signOut = useAuthStore((s) => s.signOut);
 
-  const [currency, setCurrency] = useState(data?.profile.currency ?? 'USD');
-  const [thresholdPct, setThresholdPct] = useState(
-    String(Math.round((data?.settings.leakThresholdPct ?? 0) * 100)),
-  );
-  const [saved, setSaved] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [editingName, setEditingName] = useState(false);
 
   if (error && !data) {
     return (
@@ -58,19 +47,11 @@ export function SettingsScreen() {
 
   const locationCount = Object.keys(data.locations).length;
   const sourceCount = Object.keys(data.sources).length;
-
-  const onSave = async () => {
-    await container.resolve(UpdateProfile).execute({ currency });
-    await container.resolve(UpdateSettings).execute({
-      leakThresholdPct: num(thresholdPct, data.settings.leakThresholdPct * 100) / 100,
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1800);
-  };
+  const thresholdPct = Math.round(data.settings.leakThresholdPct * 100);
 
   return (
     <Screen title="Settings" eyebrow="Configuration">
-      <ProfileCard profile={data.profile} />
+      <ProfileCard profile={data.profile} onEditName={() => setEditingName(true)} />
 
       <Pressable
         onPress={() => navigation.navigate('Locations')}
@@ -108,30 +89,56 @@ export function SettingsScreen() {
         )}
       </Pressable>
 
-      <Card style={styles.card}>
-        <SectionHeader title="Alerts" />
-        <Field
-          label="Leak tolerance (%)"
-          value={thresholdPct}
-          onChangeText={setThresholdPct}
-          keyboardType="numeric"
-          suffix="%"
-          mono
-        />
-        <Field
-          label="Currency"
-          value={currency}
-          onChangeText={setCurrency}
-          autoCapitalize="none"
-        />
-      </Card>
+      <Pressable
+        onPress={() => navigation.navigate('Alerts')}
+        accessibilityRole="button"
+        accessibilityLabel="Alerts"
+      >
+        {({ pressed }) => (
+          <Card style={[styles.navCard, pressed && styles.pressed]}>
+            <View style={styles.navLeft}>
+              <AppText variant="caption" color={colors.accent} uppercase>
+                Configuration
+              </AppText>
+              <AppText variant="title" color={colors.text}>
+                Alerts
+              </AppText>
+              <AppText variant="label" color={colors.textFaint}>
+                Leak tolerance {thresholdPct}% · currency {data.profile.currency}
+              </AppText>
+            </View>
+            <View style={styles.chevron}>
+              <Svg width={12} height={14} viewBox="0 0 12 14">
+                <Path
+                  d="M3 1 L9 7 L3 13"
+                  stroke={colors.textMuted}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </Svg>
+            </View>
+          </Card>
+        )}
+      </Pressable>
 
-      <PrimaryButton label={saved ? 'Saved ✓' : 'Save changes'} onPress={onSave} />
+      <View style={styles.spacer} />
 
       <PrimaryButton
         label="Sign out"
         variant="danger"
         onPress={() => setConfirmSignOut(true)}
+      />
+
+      <EditNameDialog
+        visible={editingName}
+        initialValue={data.profile.displayName ?? ''}
+        onCancel={() => setEditingName(false)}
+        onSave={async (displayName) => {
+          await container.resolve(UpdateProfile).execute({ displayName });
+          setEditingName(false);
+        }}
       />
 
       <ConfirmDialog
@@ -153,7 +160,7 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { gap: spacing.md },
+  spacer: { flex: 1 },
   navCard: {
     flexDirection: 'row',
     alignItems: 'center',

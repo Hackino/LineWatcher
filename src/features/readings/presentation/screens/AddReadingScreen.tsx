@@ -88,7 +88,7 @@ export function AddReadingScreen() {
 
   if (!source || !location) {
     return (
-      <Screen title="Add reading" eyebrow="Manual entry">
+      <Screen title="Add reading" eyebrow="Manual entry" back>
         <AppText variant="body" color={colors.textMuted}>
           Pick a source first.
         </AppText>
@@ -97,7 +97,7 @@ export function AddReadingScreen() {
   }
 
   return (
-    <Screen title="Add reading" eyebrow="Manual entry">
+    <Screen title="Add reading" eyebrow="Manual entry" back>
       <SourceChip
         locationLabel={location.label}
         sourceLabel={source.label}

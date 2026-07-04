@@ -8,6 +8,7 @@ import { LoginScreen } from '@features/auth/presentation/screens/LoginScreen';
 import { AddReadingScreen } from '@features/readings/presentation/screens/AddReadingScreen';
 import { ReadingDetailScreen } from '@features/readings/presentation/screens/ReadingDetailScreen';
 import { MonthlyRatesScreen } from '@features/settings/presentation/screens/MonthlyRatesScreen';
+import { AlertsScreen } from '@features/settings/presentation/screens/AlertsScreen';
 import { LocationsScreen } from '@features/locations/presentation/screens/LocationsScreen';
 import { SourceEditorScreen } from '@features/locations/presentation/screens/SourceEditorScreen';
 import { SourcePickerScreen } from '@features/locations/presentation/screens/SourcePickerScreen';
@@ -37,6 +38,7 @@ export function RootNavigator() {
           />
           <Stack.Screen name="ReadingDetail" component={ReadingDetailScreen} />
           <Stack.Screen name="MonthlyRates" component={MonthlyRatesScreen} />
+          <Stack.Screen name="Alerts" component={AlertsScreen} />
           <Stack.Screen name="Locations" component={LocationsScreen} />
           <Stack.Screen name="SourceEditor" component={SourceEditorScreen} />
           <Stack.Screen

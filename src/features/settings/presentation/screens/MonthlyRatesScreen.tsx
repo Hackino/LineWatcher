@@ -47,7 +47,7 @@ export function MonthlyRatesScreen() {
   if (!data) return <SettingsSkeleton />;
   if (!source) {
     return (
-      <Screen title="Monthly rates" eyebrow="Billing">
+      <Screen title="Monthly rates" eyebrow="Billing" back>
         <AppText variant="body" color={colors.textMuted}>
           Source no longer exists.
         </AppText>
@@ -77,7 +77,12 @@ export function MonthlyRatesScreen() {
   };
 
   return (
-    <Screen title="Monthly rates" eyebrow={source.label}>
+    <Screen
+      title="Monthly rates"
+      eyebrow={source.label}
+      back
+      keyboardBottomOffset={CTA_BLOCK_HEIGHT}
+    >
       <MonthlyRatesSection
         rates={monthRates}
         onChange={setMonth}
@@ -93,6 +98,9 @@ export function MonthlyRatesScreen() {
     </Screen>
   );
 }
+
+// PrimaryButton height (~52) + its marginTop (spacing.md = 12).
+const CTA_BLOCK_HEIGHT = 52 + 12;
 
 const styles = StyleSheet.create({
   saveBtn: { marginTop: spacing.md },

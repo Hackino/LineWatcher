@@ -17,4 +17,5 @@ export type RootStackParamList = {
   Locations: undefined;
   SourceEditor: { sourceId?: string; locationId: string };
   SourcePicker: undefined;
+  Alerts: undefined;
 };

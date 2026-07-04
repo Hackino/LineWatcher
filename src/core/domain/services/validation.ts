@@ -54,6 +54,20 @@ export function validateReading(
     ) {
       errors.houseValue = `Cannot be below the previous reading (${prior.houseValue})`;
     }
+
+    if (
+      meterMode === 'pair' &&
+      !errors.providerValue &&
+      !errors.houseValue &&
+      draft.providerValue != null &&
+      draft.houseValue != null
+    ) {
+      const providerDelta = draft.providerValue - prior.providerValue;
+      const houseDelta = draft.houseValue - (prior.houseValue ?? 0);
+      if (houseDelta > providerDelta) {
+        errors.houseValue = `House cannot exceed provider consumption (+${providerDelta} kWh)`;
+      }
+    }
   }
 
   return { ok: Object.keys(errors).length === 0, errors };
