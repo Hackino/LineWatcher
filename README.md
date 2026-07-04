@@ -319,7 +319,7 @@ Add each under **Settings → Secrets and variables → Actions → New reposito
 
 | Secret | What it is |
 | --- | --- |
-| `FIREBASE_GOOGLE_SERVICES_JSON` | Full contents of `google-services.json` |
+| `FIREBASE_GOOGLE_SERVICES_JSON_BASE64` | `base64` of `firebase/google-services.json` |
 | `FIREBASE_DATABASE_URL` | e.g. `https://<project>-default-rtdb.firebaseio.com` |
 | `ANDROID_KEYSTORE_BASE64` | `base64` of `credentials/release.keystore` |
 | `ANDROID_KEYSTORE_PASSWORD` | Keystore (store) password |

@@ -12,7 +12,8 @@ name: Build Android APK
 #   ANDROID_KEYSTORE_PASSWORD          - keystore password
 #   ANDROID_KEY_ALIAS                  - key alias inside the keystore
 #   ANDROID_KEY_PASSWORD               - key password
-#   FIREBASE_GOOGLE_SERVICES_JSON      - full contents of google-services.json
+#   FIREBASE_GOOGLE_SERVICES_JSON_BASE64 - base64 of google-services.json
+#                                          (`base64 -i firebase/google-services.json | pbcopy`)
 #   FIREBASE_DATABASE_URL              - e.g. https://<project>-default-rtdb.firebaseio.com
 #
 # Add each under: repo → Settings → Secrets and variables → Actions → New secret.
@@ -28,9 +29,6 @@ on:
         options:
           - assembleRelease
           - assembleDebug
-  push:
-    tags:
-      - 'v*'
 
 jobs:
   build:
@@ -72,14 +70,14 @@ jobs:
 
       - name: Write Firebase Android config
         env:
-          FIREBASE_GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
+          FIREBASE_GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON_BASE64 }}
         run: |
-          if [ -z "$FIREBASE_GOOGLE_SERVICES_JSON" ]; then
-            echo "::error::FIREBASE_GOOGLE_SERVICES_JSON secret is not set."
+          if [ -z "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::error::FIREBASE_GOOGLE_SERVICES_JSON_BASE64 secret is not set."
             exit 1
           fi
           mkdir -p firebase
-          printf '%s' "$FIREBASE_GOOGLE_SERVICES_JSON" > firebase/google-services.json
+          printf '%s' "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" | base64 -d > firebase/google-services.json
           # Basic sanity check — must be valid JSON.
           node -e "JSON.parse(require('fs').readFileSync('firebase/google-services.json','utf8'))"
 
